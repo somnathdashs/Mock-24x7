@@ -14,13 +14,13 @@
 
 <h2>Project Screenshots:</h2>
 
-<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/5.png?raw=true" alt="project-screenshot" width="400" height="400/">
+<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/5.png?raw=true" alt="project-screenshot" >
 
-<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/4.png?raw=true" alt="project-screenshot" width="400" height="400/">
+<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/4.png?raw=true" alt="project-screenshot" >
 
-<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/3.png?raw=true" alt="project-screenshot" width="400" height="400/">
+<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/3.png?raw=true" alt="project-screenshot">
 
-<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/1.png?raw=true" alt="project-screenshot" width="400" height="400/">
+<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/1.png?raw=true" alt="project-screenshot" >
 
   
   
