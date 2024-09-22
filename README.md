@@ -4,6 +4,14 @@
 
 <p id="description">Mock 24x7 is an AI desktop software build with flutter. That use python integrated to flutter to made a api requests to meta ai to generate questions.</p>
 
+## Updates (What's on v1.1.0)
+<img src="[https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/5.png?raw=true](https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/Screenshot%202024-09-22%20123450.png?raw=true)" alt="project-screenshot" width="400" height="400/">
+
+✨ New features available
+*  New related topic suggestions option.
+*  New UI on loading dialog.
+*  Many bugs fixed.
+
 <h2>Project Screenshots:</h2>
 
 <img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/5.png?raw=true" alt="project-screenshot" width="400" height="400/">
