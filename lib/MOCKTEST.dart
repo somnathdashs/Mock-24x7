@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cool_alert/cool_alert.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:mock24x7/Ads.dart';
 import 'package:mock24x7/MockModel.dart';
 import 'package:mock24x7/MockModelManager.dart';
+import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 
 class QuizScreen extends StatefulWidget {
   final Mockmodel _mockmodel;
-  const QuizScreen(this._mockmodel);
+  const QuizScreen(this._mockmodel, {super.key});
 
   @override
   _QuizScreenState createState() => _QuizScreenState();
@@ -21,7 +24,7 @@ class _QuizScreenState extends State<QuizScreen> {
   late Duration remainingTime; // Set 10 minutes timer
   bool quizEnded = false;
   bool quizSubmitted = false;
-  Icon flot_icon = Icon(Icons.check);
+  Icon flot_icon = const Icon(Icons.check);
   final FocusNode _focusNode = FocusNode();
 
   @override
@@ -37,10 +40,10 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // Start the 10 minutes countdown
   void startTimer() {
-    countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (remainingTime.inSeconds > 0) {
         setState(() {
-          remainingTime -= Duration(seconds: 1);
+          remainingTime -= const Duration(seconds: 1);
         });
       } else {
         endQuiz();
@@ -51,9 +54,8 @@ class _QuizScreenState extends State<QuizScreen> {
   void endQuiz() {
     setState(() {
       quizEnded = true;
-      countdownTimer.cancel();
     });
-    // Show options to submit or restart
+    countdownTimer.cancel();
     _showEndQuizOptions();
   }
 
@@ -63,47 +65,43 @@ class _QuizScreenState extends State<QuizScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text('Time Up!'),
-        content: Text('You have run out of time. What do you want to do?'),
+        title: const Text('Time Up!'),
+        content: const Text('You have run out of time. What do you want to do?'),
         actions: [
-          TextButton(
-            onPressed: quizSubmitted
-                ? () {
-                    _restart();
-                  }
-                : () {
-                    if (quizEnded ||
-                        answers.length == widget._mockmodel.QNA.length) {
-                      int score = 0;
-                      answers.forEach((index, answer) {
-                        if (widget._mockmodel.QNA[index]["Options"].indexOf(
-                                widget._mockmodel.QNA[index]['Answer']) ==
-                            answer) {
-                          score++;
-                        }
-                      });
-                      _checkAnswers(score, widget._mockmodel.QNA.length);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Please answer all questions!')),
-                      );
-                    }
-                  },
-            child: Text('Submit'),
-          ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context);
+              if (quizEnded || answers.length == widget._mockmodel.QNA.length) {
+                int score = 0;
+                answers.forEach((index, answer) {
+                  if (widget._mockmodel.QNA[index]["Options"]
+                          .indexOf(widget._mockmodel.QNA[index]['Answer']) ==
+                      answer) {
+                    score++;
+                  }
+                });
+                _checkAnswers(score, widget._mockmodel.QNA.length);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please answer all questions!')),
+                );
+              }
             },
-            child: Text('Go Back'),
+            child: const Text('Submit'),
           ),
           TextButton(
             onPressed: () {
               _restart();
               Navigator.pop(context);
             },
-            child: Text('Restart Test'),
+            child: const Text('Restart Test'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // _showExitConfirmationDialog(context);
+            },
+            child: const Text('close'),
           ),
         ],
       ),
@@ -116,7 +114,7 @@ class _QuizScreenState extends State<QuizScreen> {
       currentQuestion = 0;
       answers.clear();
       quizEnded = false;
-      flot_icon = Icon(Icons.check);
+      flot_icon = const Icon(Icons.check);
       quizSubmitted = false;
       if (widget._mockmodel.IsTimer) {
         remainingTime = Duration(minutes: widget._mockmodel.Timer_Time);
@@ -129,50 +127,81 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // Check all answers
   void _checkAnswers(int rightans, int totalmcq) async {
-    setState(() {
-      quizSubmitted = true;
-      flot_icon = Icon(Icons.restart_alt_outlined);
-    });
-    var title = "Good Job!";
-    var icos = CoolAlertType.success;
-    widget._mockmodel.setLastDateAttempt = DateTime.now();
-    widget._mockmodel.setNumCorrectMCQ = rightans;
-    widget._mockmodel.setNumIncorrectMCQ = totalmcq - rightans;
-    await MockModelManager.updateMockModel(widget._mockmodel);
-
-    if (((rightans / totalmcq) * 100).toInt() < 85) {
-      title = "Keep Trying!";
-      icos = CoolAlertType.info;
-    }
-
-    if (((rightans / totalmcq) * 100).toInt() < 40) {
-      title = "Don't Give Up!";
-      icos = CoolAlertType.warning;
-    }
-
+    await Ads.show_Interstitial_Ads();
     CoolAlert.show(
-        title: title,
-        confirmBtnText: "View Answer",
-        cancelBtnText: "Back",
-        showCancelBtn: true,
         context: context,
+        type: CoolAlertType.confirm,
+        text: 'Are you sure to submit?',
+        confirmBtnText: 'Yes',
+        cancelBtnText: 'No',
         width: 400.0,
-        animType: CoolAlertAnimType.slideInDown,
-        type: icos,
-        text: "$rightans right answer out of $totalmcq.",
-        confirmBtnColor: Color.fromARGB(255, 31, 77, 216),
-        onCancelBtnTap: () {
-          Navigator.pop(context);
-        });
+        confirmBtnColor: Colors.green,
+        onConfirmBtnTap: () async {
+          setState(() {
+            quizSubmitted = true;
+            flot_icon = const Icon(Icons.restart_alt_outlined);
+          });
+          var title = "Good Job!";
+          var icos = CoolAlertType.success;
+          widget._mockmodel.setLastDateAttempt = DateTime.now();
+          widget._mockmodel.setNumCorrectMCQ = rightans;
+          widget._mockmodel.setNumIncorrectMCQ = totalmcq - rightans;
+          await MockModelManager.updateMockModel(widget._mockmodel);
 
-    if (widget._mockmodel.IsTimer) {
-      countdownTimer.cancel();
-    }
+          if (((rightans / totalmcq) * 100).toInt() < 85) {
+            title = "Keep Trying!";
+            icos = CoolAlertType.info;
+          }
+
+          if (((rightans / totalmcq) * 100).toInt() < 40) {
+            title = "Don't Give Up!";
+            icos = CoolAlertType.warning;
+          }
+
+          CoolAlert.show(
+              title: title,
+              confirmBtnText: "View Answer",
+              cancelBtnText: "Back",
+              showCancelBtn: true,
+              context: context,
+              width: 400.0,
+              animType: CoolAlertAnimType.slideInDown,
+              type: icos,
+              text: "$rightans right answer out of $totalmcq.",
+              confirmBtnColor: const Color.fromARGB(255, 31, 77, 216),
+              onCancelBtnTap: () {
+                Navigator.pop(context);
+              });
+
+          if (widget._mockmodel.IsTimer) {
+            countdownTimer.cancel();
+          }
+        });
   }
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((x) async {
+      await Ads.Load_Interstitial_Ads();
+    });
+    void showExitConfirmationDialog() async {
+      CoolAlert.show(
+          context: context,
+          width: 400.0,
+          type: CoolAlertType.confirm,
+          text: 'Are you really want to exit test?',
+          confirmBtnText: 'Yes',
+          cancelBtnText: 'No',
+          confirmBtnColor: Colors.blueAccent,
+          onConfirmBtnTap: () async {
+            await Ads.show_Interstitial_Ads();
+
+            Navigator.pop(context);
+          });
+    }
+
     final List<Map<String, dynamic>> questions = widget._mockmodel.QNA;
+
     // Method to select a question based on number pressed
     void selectQuestionByNumber(int number) {
       if (questions[currentQuestion]["Options"].length >= number) {
@@ -182,259 +211,232 @@ class _QuizScreenState extends State<QuizScreen> {
       }
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget._mockmodel.Topic),
-      ),
-      body: Focus(
-        focusNode: _focusNode,
-        autofocus: true,
-        onKey: (FocusNode node, RawKeyEvent event) {
-          if (event is RawKeyDownEvent) {
-            if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-              if (currentQuestion < questions.length - 1 && !quizEnded) {
-                setState(() {
-                  currentQuestion++;
-                });
-              }
-            } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-              if (currentQuestion > 0 && !quizEnded) {
-                setState(() {
-                  currentQuestion--;
-                });
-              }
-            } else if (event.logicalKey == LogicalKeyboardKey.enter) {
-              if (!quizSubmitted) {
-                if (quizEnded || answers.length == questions.length) {
-                  int score = 0;
-                  answers.forEach((index, answer) {
-                    if (questions[index]["Options"]
-                            .indexOf(questions[index]['Answer']) ==
-                        answer) {
-                      score++;
-                    }
-                  });
-                  _checkAnswers(score, questions.length);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please answer all questions!')),
-                  );
-                }
-              }
-            } // Handle Number Keys (Digit0 to Digit9)
-            else if (event.logicalKey == LogicalKeyboardKey.digit1 ||
-                event.logicalKey == LogicalKeyboardKey.numpad1) {
-              selectQuestionByNumber(1);
-            } else if (event.logicalKey == LogicalKeyboardKey.digit2 ||
-                event.logicalKey == LogicalKeyboardKey.numpad2) {
-              selectQuestionByNumber(2);
-            } else if (event.logicalKey == LogicalKeyboardKey.digit3 ||
-                event.logicalKey == LogicalKeyboardKey.numpad3) {
-              selectQuestionByNumber(3);
-            } else if (event.logicalKey == LogicalKeyboardKey.digit4 ||
-                event.logicalKey == LogicalKeyboardKey.numpad4) {
-              selectQuestionByNumber(4);
-            } else if (event.logicalKey == LogicalKeyboardKey.digit5 ||
-                event.logicalKey == LogicalKeyboardKey.numpad5) {
-              selectQuestionByNumber(5);
-            } else if (event.logicalKey == LogicalKeyboardKey.digit6 ||
-                event.logicalKey == LogicalKeyboardKey.numpad6) {
-              selectQuestionByNumber(6);
-            } else if (event.logicalKey == LogicalKeyboardKey.digit7 ||
-                event.logicalKey == LogicalKeyboardKey.numpad7) {
-              selectQuestionByNumber(7);
-            } else if (event.logicalKey == LogicalKeyboardKey.digit8 ||
-                event.logicalKey == LogicalKeyboardKey.numpad8) {
-              selectQuestionByNumber(8);
-            } else if (event.logicalKey == LogicalKeyboardKey.digit9 ||
-                event.logicalKey == LogicalKeyboardKey.numpad9) {
-              selectQuestionByNumber(9);
-            }
-          }
-          return KeyEventResult
-              .handled; // Indicate that the key event was handled
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) async {
+          // Add your custom back button logic here
+          showExitConfirmationDialog();
         },
-        child: Row(
-          children: [
-            // Left Side: Questions and Options
-            Expanded(
-              flex: 8,
-              child: Padding(
-                padding: const EdgeInsets.only(
-                    top: 50.0, left: 50.0, right: 50.0, bottom: 150.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Question No: ${currentQuestion + 1}/${questions.length}',
-                      style:
-                          TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+        child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () async {
+                  // Handle back button in the app bar
+                  showExitConfirmationDialog();
+                }),
+            title: FittedBox(
+              fit: BoxFit.fitWidth,
+              child: Text(widget._mockmodel.Topic),
+            ),
+          ),
+          body: Focus(
+            focusNode: _focusNode,
+            autofocus: true,
+            onKey: (FocusNode node, RawKeyEvent event) {
+              // Key handling logic...
+              return KeyEventResult.handled;
+            },
+            child: Row(
+              children: [
+                // Left Side: Questions and Options
+                Expanded(
+                  flex: 8,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.05,
+                      vertical: screenHeight * 0.05,
                     ),
-                    SizedBox(height: 30),
-                    Text(
-                      questions[currentQuestion]['Question'],
-                      style: TextStyle(fontSize: 23),
-                    ),
-                    SizedBox(height: 20),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: questions[currentQuestion]['Options'].length,
-                        itemBuilder: (context, index) {
-                          bool isCorrect = questions[currentQuestion]
-                                  ['Answer'] ==
-                              questions[currentQuestion]['Options'][index];
-                          bool isSelected = answers[currentQuestion] == index;
-                          return RadioListTile<int>(
-                            title: Text(
-                              questions[currentQuestion]['Options'][index],
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            value: index,
-                            groupValue: answers[currentQuestion],
-                            onChanged: quizEnded || quizSubmitted
-                                ? null
-                                : (val) {
-                                    setState(() {
-                                      answers[currentQuestion] = val;
-                                    });
-                                  },
-                            // Highlight correct answers in green after submission
-                            tileColor: quizSubmitted && isCorrect
-                                ? Colors.green.withOpacity(0.3)
-                                : null,
-                          );
-                        },
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        ElevatedButton(
-                          onPressed: currentQuestion > 0 && !quizEnded
-                              ? () {
-                                  setState(() {
-                                    currentQuestion--;
-                                  });
-                                }
-                              : null,
-                          child:
-                              Text('Previous', style: TextStyle(fontSize: 20)),
+                        FittedBox(
+                          child: Text(
+                            'Question No: ${currentQuestion + 1}/${questions.length}',
+                            style: TextStyle(
+                                fontSize: screenWidth > 600 ? 30 : 25,
+                                fontWeight: FontWeight.bold),
+                          ),
                         ),
-                        ElevatedButton(
-                          onPressed: currentQuestion < questions.length - 1 &&
-                                  !quizEnded
-                              ? () {
-                                  setState(() {
-                                    currentQuestion++;
-                                  });
-                                }
-                              : null,
-                          child: Text('Next', style: TextStyle(fontSize: 20)),
+                        SizedBox(height: screenHeight * 0.03),
+                        Text(
+                          questions[currentQuestion]['Question'],
+                          textAlign: TextAlign.justify,
+                          style:
+                              TextStyle(fontSize: screenWidth > 600 ? 22 : 15),
                         ),
+                        SizedBox(height: screenHeight * 0.02),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount:
+                                questions[currentQuestion]['Options'].length,
+                            itemBuilder: (context, index) {
+                              bool isCorrect = questions[currentQuestion]
+                                      ['Answer'] ==
+                                  questions[currentQuestion]['Options'][index];
+                              bool isSelected =
+                                  answers[currentQuestion] == index;
+                              return RadioListTile<int>(
+                                title: Text(
+                                  questions[currentQuestion]['Options'][index],
+                                  style: TextStyle(
+                                      fontSize: screenWidth > 600 ? 20 : 15),
+                                ),
+                                value: index,
+                                groupValue: answers[currentQuestion],
+                                onChanged: quizEnded || quizSubmitted
+                                    ? null
+                                    : (val) {
+                                        setState(() {
+                                          answers[currentQuestion] = val!;
+                                        });
+                                      },
+                                tileColor: quizSubmitted && isCorrect
+                                    ? Colors.green.withOpacity(0.3)
+                                    : null,
+                              );
+                            },
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            ElevatedButton(
+                              onPressed: currentQuestion > 0
+                                  ? () {
+                                      setState(() {
+                                        currentQuestion--;
+                                      });
+                                    }
+                                  : null,
+                              child: Text('Previous',
+                                  style: TextStyle(
+                                      fontSize: screenWidth > 600 ? 20 : 15)),
+                            ),
+                            ElevatedButton(
+                              onPressed: currentQuestion < questions.length - 1
+                                  ? () {
+                                      setState(() {
+                                        currentQuestion++;
+                                      });
+                                    }
+                                  : null,
+                              child: Text('Next',
+                                  style: TextStyle(
+                                      fontSize: screenWidth > 600 ? 20 : 15)),
+                            ),
+                          ],
+                        ),
+                        Ads.Show_Banner_Ads(),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            // Right Side: Timer and Overview
-            Expanded(
-              flex: 3,
-              child: Column(
-                children: [
-                  // Timer display
-                  Padding(
-                    padding: const EdgeInsets.all(30.0),
-                    child: Center(
-                      child: Text(
-                        (widget._mockmodel.IsTimer)
-                            ? 'Time Left: ${remainingTime.inMinutes}:${(remainingTime.inSeconds % 60).toString().padLeft(2, '0')}'
-                            : "No Timer",
-                        style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  // Overview of questions
-                  Expanded(
-                    child: GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        childAspectRatio: 2,
-                      ),
-                      itemCount: questions.length,
-                      itemBuilder: (context, index) {
-                        bool attempted = answers.containsKey(index);
-                        bool isCorrect = quizSubmitted &&
-                            answers[index] ==
-                                questions[index]['Options']
-                                    .indexOf(questions[index]['Answer']);
-                        return GestureDetector(
-                          onTap: () {
-                            if (!quizEnded) {
-                              setState(() {
-                                currentQuestion = index;
-                              });
-                            }
-                          },
-                          child: Container(
-                            margin: EdgeInsets.all(4.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: quizSubmitted
-                                    ? (isCorrect ? Colors.green : Colors.red)
-                                    : (attempted ? Colors.blue : Colors.grey),
-                                width: 2,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text('Q${index + 1}'),
-                            ),
+                // Right Side: Timer and Overview
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.all(screenWidth * 0.05),
+                        child: Center(
+                          child: Text(
+                            (widget._mockmodel.IsTimer)
+                                ? 'Time Left: ${remainingTime.inMinutes}:${(remainingTime.inSeconds % 60).toString().padLeft(2, '0')}'
+                                : "No Timer",
+                            style: TextStyle(
+                                fontSize: screenWidth > 600 ? 22 : 17,
+                                fontWeight: FontWeight.bold),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      ),
+                      // Overview of questions
+                      Expanded(
+                        child: GridView.builder(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: (screenWidth > 600)
+                                ? 5
+                                : 2, // Adjust grid based on screen size
+                            childAspectRatio: 2,
+                          ),
+                          itemCount: questions.length,
+                          itemBuilder: (context, index) {
+                            bool attempted = answers.containsKey(index);
+                            bool isCorrect = quizSubmitted &&
+                                answers[index] ==
+                                    questions[index]['Options']
+                                        .indexOf(questions[index]['Answer']);
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  currentQuestion = index;
+                                });
+                              },
+                              child: Container(
+                                margin:
+                                    EdgeInsets.all(screenWidth > 600 ? 2 : 1),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: quizSubmitted
+                                        ? (isCorrect
+                                            ? Colors.green
+                                            : Colors.red)
+                                        : (attempted
+                                            ? Colors.blue
+                                            : Colors.grey),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Q${index + 1}',
+                                    style: TextStyle(
+                                        fontSize: screenWidth > 600 ? 16 : 12),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: quizSubmitted
-            ? () {
-                _restart();
-              }
-            : () {
-                if (quizEnded || answers.length == questions.length) {
-                  int score = 0;
-                  answers.forEach((index, answer) {
-                    if (questions[index]["Options"]
-                            .indexOf(questions[index]['Answer']) ==
-                        answer) {
-                      score++;
-                    }
-                  });
-                  _checkAnswers(score, questions.length);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Please answer all questions!')),
-                  );
-                }
-              },
-        child: flot_icon,
-        backgroundColor: Colors.green,
-      ),
-    );
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: quizSubmitted
+                ? () {
+                    _restart();
+                  }
+                : () {
+                    int score = 0;
+                    answers.forEach((index, answer) {
+                      if (questions[index]["Options"]
+                              .indexOf(questions[index]['Answer']) ==
+                          answer) {
+                        score++;
+                      }
+                    });
+                    _checkAnswers(score, questions.length);
+                  },
+            backgroundColor: Colors.green,
+            child: flot_icon,
+          ),
+        ));
   }
 
   @override
   void dispose() {
+    super.dispose();
     _focusNode.dispose();
     if (widget._mockmodel.IsTimer) {
       countdownTimer.cancel();
     }
-    super.dispose();
   }
 }

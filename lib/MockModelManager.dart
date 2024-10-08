@@ -4,6 +4,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class MockModelManager {
   static const String _key = 'mock_models';
+  static const String _Gimini_key = 'Gimini_key';
+
+  // Gimini api
+  static Future<void> save_gimini_key(String apiKey) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Convert the model to JSON and store it
+    await prefs.setString(_Gimini_key, apiKey);
+  }
+
+// Retrieve mock models from SharedPreferences
+  static Future<String> get_gimini_key() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // prefs.clear();
+
+    // Retrieve the list of stored model JSON strings
+    String apiKey = prefs.getString(_Gimini_key) ?? "";
+
+    // Decode the JSON strings and map them to MockModel objects
+    return apiKey;
+  }
 
   // Save updated mock model to SharedPreferences
   static Future<void> updateMockModel(Mockmodel updatedModel) async {
@@ -44,7 +65,7 @@ class MockModelManager {
 
     // Decode the JSON strings and map them to MockModel objects
     return storedModels.map((jsonString) {
-      // Decode the JSON string and convert it to a MockModel object      
+      // Decode the JSON string and convert it to a MockModel object
       return Mockmodel.fromJson(jsonDecode(jsonString));
     }).toList();
   }

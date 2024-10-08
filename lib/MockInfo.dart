@@ -5,14 +5,16 @@ import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mock24x7/AddTODB/addtodb.dart';
+import 'package:mock24x7/Ads.dart';
 import 'package:mock24x7/MOCKTEST.dart';
 import 'package:mock24x7/MockModel.dart';
 import 'package:mock24x7/MockModelManager.dart';
 import 'package:mock24x7/TestWork.dart';
+import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 
 class SuccessScreen extends StatefulWidget {
   final Mockmodel _mockmodel;
-  const SuccessScreen(this._mockmodel);
+  const SuccessScreen(this._mockmodel, {super.key});
 
   @override
   _SuccessScreenState createState() => _SuccessScreenState();
@@ -23,16 +25,16 @@ class _SuccessScreenState extends State<SuccessScreen> {
 
   final TextEditingController _timerController = TextEditingController();
 
-  // late Future<List<Map<String, dynamic>>> Suggest_List;
-  late Future<dynamic> Suggest_List;
+  var Suggest_List;
+
+  bool Has_suggestion_pressed = false;
 
   Future fetchData() async {
     String cmdTopicGen =
         Testwork().cmd_related_denerater(widget._mockmodel.Topic, "5");
-    print(cmdTopicGen);
 
     // Return a Future that resolves to the result of the Python shell command
-    return Testwork().runPythonShell(cmdTopicGen).then((result) {
+    return Testwork().Ask_Gemini(cmdTopicGen).then((result) {
       // If result is null, return an empty list
       return (result.isNotEmpty) ? jsonDecode(result) : [];
     }).catchError((error) {
@@ -46,14 +48,13 @@ class _SuccessScreenState extends State<SuccessScreen> {
   void initState() {
     // TODO: implement initState
     // Suggest_List = Future.value(widget._mockmodel.SuggestTopic);
-    Suggest_List = fetchData();
     super.initState();
   }
 
   void _startTest(int minutes) async {
     if (minutes <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
               'Enter a valid time in integer formate and greater than "0"'),
         ),
@@ -78,11 +79,11 @@ class _SuccessScreenState extends State<SuccessScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Set Timer"),
+          title: const Text("Set Timer"),
           content: TextField(
             controller: _timerController,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               hintText: "Enter time in minutes",
             ),
           ),
@@ -91,7 +92,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text("Cancel"),
+              child: const Text("Cancel"),
             ),
             ElevatedButton(
               onPressed: () {
@@ -102,7 +103,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
                   _startTest(minutes);
                 }
               },
-              child: Text("Start Test"),
+              child: const Text("Start Test"),
             ),
           ],
         );
@@ -110,42 +111,42 @@ class _SuccessScreenState extends State<SuccessScreen> {
     );
   }
 
-  void _New_topic_dialog(Sug_Topic) {
+  void _New_topic_dialog(sugTopic) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Generate Question"),
-          content: Container(
+          title: const Text("Generate Question"),
+          content: SizedBox(
             height: 200,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "" + Sug_Topic["Topic"],
-                  style: TextStyle(
+                  "" + sugTopic["Topic"],
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 25,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Text(
-                      "Level: " + Sug_Topic["Difficulty"],
-                      style: TextStyle(
+                      "Level: " + sugTopic["Difficulty"],
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w400,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      "Number of Question: " + Sug_Topic["Num_Mcq"].toString(),
-                      style: TextStyle(
+                      "Number of Question: " + sugTopic["Num_Mcq"].toString(),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w400,
                       ),
@@ -161,15 +162,15 @@ class _SuccessScreenState extends State<SuccessScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text("Cancel"),
+              child: const Text("Cancel"),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                _generateButtonPressed(Sug_Topic["Topic"],
-                    Sug_Topic["Difficulty"], Sug_Topic["Num_Mcq"]);
+                _generateButtonPressed(sugTopic["Topic"],
+                    sugTopic["Difficulty"], sugTopic["Num_Mcq"]);
               },
-              child: Text("Generate Mock"),
+              child: const Text("Generate Mock"),
             ),
           ],
         );
@@ -184,7 +185,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
         difficulty == "" ||
         selectedNumber <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill all the fiels to continue.')),
+        const SnackBar(content: Text('Please fill all the fiels to continue.')),
       );
       return;
     }
@@ -193,16 +194,16 @@ class _SuccessScreenState extends State<SuccessScreen> {
     Testwork().showLoadingDialog(context);
 
     // Call the async function to generate mock and wait for the result
-    var _newmockmodel =
+    var newmockmodel =
         await Testwork().GenerateMock(topic, difficulty, selectedNumber);
 
     // Close the loading dialog
     Navigator.pop(context);
 
-    if (_newmockmodel != null) {
+    if (newmockmodel != null) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => SuccessScreen(_newmockmodel)),
+        MaterialPageRoute(builder: (context) => SuccessScreen(newmockmodel)),
       );
     } else {
       CoolAlert.show(
@@ -215,13 +216,14 @@ class _SuccessScreenState extends State<SuccessScreen> {
           type: CoolAlertType.error,
           text:
               "Some Problem occurs while generating mock. Try Again\n\nTips: Sometime it occurs due to max questions.So, try to generate less question from maximum question.",
-          confirmBtnColor: Color.fromARGB(255, 31, 77, 216));
+          confirmBtnColor: const Color.fromARGB(255, 31, 77, 216));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    UploadQNA().uploadMockData(widget._mockmodel);
+    // Use MediaQuery to get screen size
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       appBar: AppBar(
@@ -229,178 +231,200 @@ class _SuccessScreenState extends State<SuccessScreen> {
             style: GoogleFonts.poppins()),
       ),
       body: Padding(
-          padding: EdgeInsets.symmetric(vertical: 20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 15.0),
-                        child: Text(
-                          "Your test on '" +
-                              widget._mockmodel.Topic +
-                              "' is ready.",
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
-                              textStyle: TextStyle(fontSize: 35)),
-                        ),
-                      ),
-                      SizedBox(height: 40),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              _showTimerDialog();
-                            },
-                            child: Text(
-                              "Set a Timer",
-                              style: GoogleFonts.cabin(
-                                textStyle: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30.0),
+          padding: const EdgeInsets.symmetric(vertical: 20.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                          child: Text(
+                            "Your test on '${widget._mockmodel.Topic}' is ready.",
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.poppins(
+                              textStyle: TextStyle(
+                                fontSize: screenWidth > 600
+                                    ? 30
+                                    : 20, // Responsive font size
                               ),
                             ),
                           ),
-                          ElevatedButton(
-                            onPressed: () async {
-                              widget._mockmodel.setIsTimer = false;
-                              await MockModelManager.updateMockModel(
-                                  widget._mockmodel);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        QuizScreen(widget._mockmodel)),
-                              );
-                            },
-                            child: Text(
-                              "Start Without Timer",
-                              style: GoogleFonts.cabin(
-                                textStyle: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
+                        ),
+                        const SizedBox(height: 40),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Flexible(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  _showTimerDialog();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                  ),
+                                ),
+                                child: Text(
+                                  "Set a Timer",
+                                  style: GoogleFonts.cabin(
+                                    textStyle: TextStyle(
+                                      fontSize: screenWidth > 600
+                                          ? 20
+                                          : 15, // Responsive font size
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                            style: ElevatedButton.styleFrom(
-                              // backgroundColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30.0),
+                            Flexible(
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  widget._mockmodel.setIsTimer = false;
+                                  await MockModelManager.updateMockModel(
+                                      widget._mockmodel);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          QuizScreen(widget._mockmodel),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                  ),
+                                ),
+                                child: Text(
+                                  "Start Without Timer",
+                                  style: GoogleFonts.cabin(
+                                    textStyle: TextStyle(
+                                      fontSize: screenWidth > 600
+                                          ? 20
+                                          : 15, // Responsive font size
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+                Has_suggestion_pressed
+                    ? const SizedBox.shrink()
+                    : ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            Suggest_List = fetchData();
+                            Has_suggestion_pressed = true;
+                          });
+                        },
+                        child: const Text("Related Topics")),
+                Ads.Show_Banner_Ads(),
+                const SizedBox(height: 50),
+                FutureBuilder<dynamic>(
+                  future: Suggest_List,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(
+                          child: Text('No Topic available to suggest.'));
+                    }
+
+                    // Data is loaded
+                    List<dynamic> data = snapshot.data!;
+
+                    return Padding(
+                      padding: const EdgeInsets.all(25.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            "Related Topics",
+                            style: TextStyle(
+                              fontSize: screenWidth > 600
+                                  ? 35
+                                  : 25, // Responsive font size
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: List.generate(
+                                data.length,
+                                (index) => _buildCard(data[index], screenWidth),
                               ),
                             ),
                           ),
                         ],
                       ),
-
-                      // TextField(
-                      //   controller: timerController,
-                      //   keyboardType: TextInputType.number,
-                      //   decoration: InputDecoration(
-                      //     hintText: "Set timer (in minutes)",
-                      //     border: OutlineInputBorder(
-                      //       borderRadius: BorderRadius.circular(30.0),
-                      //     ),
-                      //   ),
-                      // ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-              ),
-              SizedBox(height: 50),
-              FutureBuilder<dynamic>(
-                future: Suggest_List,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(
-                        child: Text('No Topic available to suggest.'));
-                  }
-
-                  // Data is loaded
-                  List<dynamic> data = snapshot.data!;
-
-                  return Padding(
-                    padding: EdgeInsets.all(25.0),
-                    child: Column(
-                      children: [
-                        Text(
-                          "Related Topics",
-                          style: TextStyle(
-                              fontSize: 35, fontWeight: FontWeight.bold),
-                        ),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: List.generate(
-                              data.length,
-                              (index) => _buildCard(data[index]),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
+                Ads.Show_Banner_Ads(),
+              ],
+            ),
           )),
     );
   }
 
-  // Card design for each item
-  Widget _buildCard(item) {
+// Card design for each item
+  Widget _buildCard(item, double screenWidth) {
     return GestureDetector(
       onTap: () {
         _New_topic_dialog(item);
       },
       child: Card(
-        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
         elevation: 4,
         child: Container(
-          width: 400,
-          padding: EdgeInsets.all(35.0),
+          width: screenWidth > 600 ? 400 : 300, // Responsive card width
+          padding: EdgeInsets.all(
+              screenWidth > 600 ? 35.0 : 20.0), // Responsive padding
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 item["Topic"],
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: screenWidth > 600 ? 20 : 16, // Responsive font size
                   fontWeight: FontWeight.bold,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: 25),
+              const SizedBox(height: 25),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Text(
                     "Level: " + item["Difficulty"],
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize:
+                          screenWidth > 600 ? 16 : 14, // Responsive font size
                       fontWeight: FontWeight.w400,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    "Number of Question: " + item["Num_Mcq"].toString(),
+                    "Number of Questions: ${item["Num_Mcq"]}",
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize:
+                          screenWidth > 600 ? 16 : 14, // Responsive font size
                       fontWeight: FontWeight.w400,
                     ),
                     overflow: TextOverflow.ellipsis,

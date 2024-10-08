@@ -1,33 +1,79 @@
 import "dart:convert";
 import "dart:math";
+import "dart:io";
 
 import "package:cool_alert/cool_alert.dart";
 import "package:flutter/material.dart";
+import "package:google_generative_ai/google_generative_ai.dart";
 import "package:mock24x7/MockModel.dart";
 import "package:mock24x7/MockModelManager.dart";
 import "package:python_shell/python_shell.dart";
+import "package:url_launcher/url_launcher.dart";
+import "package:url_launcher/url_launcher_string.dart";
 
 class Testwork {
-  String cmdGenerater(String Topic, String level, String number_mcq) {
-    Topic = Topic.toUpperCase();
-    return '''Generate $number_mcq MCQs on the topic '$Topic' in valid JSON format. Each MCQ should be a dictionary with keys: 'Question', 'Options' (a list of 4 distinct options), 'Answer' (the correct answer from the options in string). Make sure all questions you generate must have difficulty level =  '$level'. Ensure all questions are unique, clear, and contextually accurate. Output should only be in JSON format without any additional text or special characters. Use single quotes for all strings. Return the JSON as a list of dictionaries. Make sure to not use any blank lines or new lines. ''';
+  Future<void> openURL(String url) async {
+    // For Web and Mobile platforms
+    if (Platform.isIOS || Platform.isAndroid) {
+      var i = await canLaunchUrlString(url);
+      if (!await launchUrl(Uri.parse(url))) {
+        throw Exception('Could not launch $url');
+      }
+      // if (i) {
+      //   await launchUrlString(url);
+      // } else {
+      //   throw 'Could not launch $url';
+      // }
+    } else {
+      // For Desktop platforms (Windows, macOS, Linux)
+      if (Platform.isWindows) {
+        await Process.run('start', [url], runInShell: true);
+      } else if (Platform.isMacOS) {
+        await Process.run('open', [url]);
+      } else if (Platform.isLinux) {
+        await Process.run('xdg-open', [url]);
+      }
+    }
   }
 
-  String cmd_related_denerater(String Topic, String number_of_topic) {
+  String cmdGenerater(String Topic, String level, String numberMcq) {
     Topic = Topic.toUpperCase();
-    return '''Generate $number_of_topic topic related to '$Topic'. Make the randomness be 35% . Response in json format having a list of objects of keys 'Topic' (50 char), 'Difficulty' (10 Char),'Num_Mcq' (Max should be 15). Do not respond other than json format. Also, do not use new lines. ''';
+    return '''Generate $numberMcq MCQs on the topic '$Topic' in valid JSON format. Each MCQ should be a dictionary with keys: 'Question', 'Options' (a list of 4 distinct options), 'Answer' (the correct answer from the options in string). Make sure all questions you generate must have difficulty level =  '$level'. Ensure all questions are unique, clear, and contextually accurate. Output should only be in JSON format without any additional text or special characters. Use single quotes for all strings. Return the JSON as a list of dictionaries. Make sure to not use any blank lines or new lines. ''';
+  }
+
+  String cmd_related_denerater(String Topic, String numberOfTopic) {
+    Topic = Topic.toUpperCase();
+    return '''Generate $numberOfTopic topic related to '$Topic'. Make the randomness be 35% . Response in json format having a list of objects of keys 'Topic' (50 char), 'Difficulty' (10 Char),'Num_Mcq' (Max should be 15). Do not respond other than json format. Also, do not use new lines. ''';
+  }
+
+  Ask_Gemini(String cmd, [apiKey]) async {
+    if (apiKey == null) {
+      apiKey = await MockModelManager.get_gimini_key();
+    }
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-1.5-flash-latest',
+        apiKey: apiKey,
+      );
+
+      final content = [Content.text(cmd)];
+      final res = await model.generateContent(content);
+      return res.text!;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<String> runPythonShell(String cmd) async {
     // Hypothetical method to run Python shell code
     var shell = PythonShell(PythonShellConfig());
     await shell.initialize();
-    String Ret_Txt = "";
+    String retTxt = "";
     var instance = ShellManager.getInstance("default");
     instance.installRequires(["meta-ai-api"], echo: true);
     var result = await instance.runString("""
 from meta_ai_api import MetaAI
-ai = MetaAI()
+ai = MetaAI() 
 response = ai.prompt(message="$cmd")
 print(response["message"])
     """,
@@ -35,17 +81,17 @@ print(response["message"])
         listener: ShellListener(
             onMessage: (message) {
               // Ret_Txt= message["message"]; // Assuming result.output contains the response
-              Ret_Txt = message;
+              retTxt = message;
 
               // if `echo` is `true`, log to console automatically
             },
             onError: (e, s) {
-              print("error!" + e.toString());
+              print("error!$e");
             },
             onComplete: () {}));
     // print(result);
 
-    return Ret_Txt;
+    return retTxt;
   }
 
   void showLoadingDialog(BuildContext context) {
@@ -56,48 +102,33 @@ print(response["message"])
       context: context,
       type: CoolAlertType.loading,
     );
-    // showDialog(
-    //   context: context,
-    //   barrierDismissible: false, // Prevent dismissing by tapping outside
-    //   builder: (BuildContext context) {
-    //     return const AlertDialog(
-    //       content: Row(
-    //         children: [
-    //           CircularProgressIndicator(),
-    //           SizedBox(width: 20),
-    //           Text("Generating Mock. It may take a minute..."),
-    //         ],
-    //       ),
-    //     );
-    //   },
-    // );
   }
 
   Future GenerateMock(String topic, String difficulty, int number) async {
     String cmd = cmdGenerater(topic, difficulty, number.toString());
-    String QNA_string = await runPythonShell(cmd);
+    String qnaString = await Ask_Gemini(cmd);
 
-    if (QNA_string == "" || QNA_string == null) {
-      QNA_string = await runPythonShell(cmd);
-      if (QNA_string == "" || QNA_string == null) {
+    if (qnaString == "" || qnaString == null) {
+      qnaString = await Ask_Gemini(cmd);
+      if (qnaString == "" || qnaString == null) {
         return;
       }
     }
 
-    var _temp_QNA;
+    var temp_QNA;
     try {
-      _temp_QNA = jsonDecode(QNA_string).cast<Map<String, dynamic>>();
+      temp_QNA = jsonDecode(qnaString).cast<Map<String, dynamic>>();
     } catch (E) {
-      print("Error: " + E.toString());
+      print("Error: $E");
       return;
     }
 
-    Mockmodel _newmockmodel = Mockmodel(
+    Mockmodel newmockmodel = Mockmodel(
       id: Random().nextInt(180000),
       Topic: topic,
       Difficulty: difficulty,
       Num_MCQ: number,
-      QNA: (_temp_QNA == null) ? List.empty() : _temp_QNA,
+      QNA: (temp_QNA == null) ? List.empty() : temp_QNA,
       Num_Correct_MCQ: 0,
       Num_attempt_MCQ: 0,
       Num_Incorrect_MCQ: 0,
@@ -108,8 +139,8 @@ print(response["message"])
       is_upload: false,
     );
 
-    await MockModelManager.saveMockModel(_newmockmodel);
+    await MockModelManager.saveMockModel(newmockmodel);
 
-    return _newmockmodel;
+    return newmockmodel;
   }
 }

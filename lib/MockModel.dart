@@ -32,14 +32,14 @@ class Mockmodel {
   });
 
   // Setters
-  set setNumCorrectMCQ(int numCorrectMCQ) => this.Num_Correct_MCQ = numCorrectMCQ;
-  set setNumIncorrectMCQ(int numIncorrectMCQ) => this.Num_Incorrect_MCQ = numIncorrectMCQ;
-  set setNumAttemptMCQ(int numAttemptMCQ) => this.Num_attempt_MCQ = numAttemptMCQ;
-  set setLastDateAttempt(DateTime lastDateAttempt) => this.LastDate_Attempt = lastDateAttempt;
-  set setDateGenerated(DateTime dateGenerated) => this.Date_Generated = dateGenerated;
-  set setIsTimer(bool isTimer) => this.IsTimer = isTimer;
-  set setTimerTime(int timerTime) => this.Timer_Time = timerTime;
-  set set_is_upload(bool _is_upload) => this.is_upload = _is_upload;
+  set setNumCorrectMCQ(int numCorrectMCQ) => Num_Correct_MCQ = numCorrectMCQ;
+  set setNumIncorrectMCQ(int numIncorrectMCQ) => Num_Incorrect_MCQ = numIncorrectMCQ;
+  set setNumAttemptMCQ(int numAttemptMCQ) => Num_attempt_MCQ = numAttemptMCQ;
+  set setLastDateAttempt(DateTime lastDateAttempt) => LastDate_Attempt = lastDateAttempt;
+  set setDateGenerated(DateTime dateGenerated) => Date_Generated = dateGenerated;
+  set setIsTimer(bool isTimer) => IsTimer = isTimer;
+  set setTimerTime(int timerTime) => Timer_Time = timerTime;
+  set set_is_upload(bool is_upload) => is_upload = is_upload;
 
   // Convert to JSON
   Map<String, dynamic> toJson() => {
