@@ -25,6 +25,7 @@ Gemini API is nessesary to use the app. Mock 24x7 use your Gemini API to generat
 #### 
 ![](https://firebasestorage.googleapis.com/v0/b/my-portfolio-51150.appspot.com/o/ScreenShort%2FMock%20247%20guid%2FScreenshot%202024-10-08%20125638.png?alt=media&token=e45ac0ae-26c0-4287-8b6b-003d0f23217f)
 
+<<<<<<< HEAD
 ##### Step 4: Create new project, if you have any existing project you can go with that also.
 ####
 ![](https://firebasestorage.googleapis.com/v0/b/my-portfolio-51150.appspot.com/o/ScreenShort%2FMock%20247%20guid%2FScreenshot%202024-10-08%20130230.png?alt=media&token=6efe5856-4fa6-4bd0-b377-9ad6c5f956ca) 
@@ -46,6 +47,15 @@ If the API is correct and working it will go into main screen. The app use "Gemi
 Give the required infos like Topic Name, Difficulty level and Number of questions. Then press generate to get tests generate for you.
 ####
 ![](https://firebasestorage.googleapis.com/v0/b/my-portfolio-51150.appspot.com/o/ScreenShort%2FMock%20247%20guid%2FScreenshot%202024-10-08%20213704.png?alt=media&token=b54bd18e-bbb8-434c-aca8-ef756f7af986)
+=======
+<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/5.png?raw=true" alt="project-screenshot" >
+
+<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/4.png?raw=true" alt="project-screenshot" >
+
+<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/3.png?raw=true" alt="project-screenshot">
+
+<img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/1.png?raw=true" alt="project-screenshot" >
+>>>>>>> a29438fa7106d72e323662cf8dd5bb21bebaa03e
 
 Thank for using Mock 24x7. If you like the app and it is helpful then don't forget to Buy Me a Coffee.
 <P align="center">Made with 💖</P>
