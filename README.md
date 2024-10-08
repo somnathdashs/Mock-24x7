@@ -55,7 +55,6 @@ Give the required infos like Topic Name, Difficulty level and Number of question
 <img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/3.png?raw=true" alt="project-screenshot">
 
 <img src="https://github.com/somnathdashs/Mock-24x7/blob/main/Screenshot/1.png?raw=true" alt="project-screenshot" >
->>>>>>> a29438fa7106d72e323662cf8dd5bb21bebaa03e
 
 Thank for using Mock 24x7. If you like the app and it is helpful then don't forget to Buy Me a Coffee.
 <P align="center">Made with 💖</P>
