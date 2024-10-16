@@ -1,26 +1,13 @@
-import 'dart:convert';
-import 'dart:math';
-import 'dart:typed_data';
 // import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:intl/intl.dart';
-import 'dart:isolate'; // For isolate
-import 'package:cool_alert/cool_alert.dart';
+// For isolate
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mock24x7/AddTODB/addtodb.dart';
 import 'package:mock24x7/Ads.dart';
 import 'package:mock24x7/GiminiApi/Api_set_Screen.dart';
 import 'package:mock24x7/HomeScreen.dart';
-import 'package:mock24x7/MockInfo.dart';
-import 'package:mock24x7/MockModel.dart';
 import 'package:mock24x7/MockModelManager.dart';
-import 'package:mock24x7/TestWork.dart';
-import 'package:flutter/foundation.dart';
 
-import 'package:flutter/services.dart';
-import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 
-var mockModelList = MockModelManager.getMockModels(); // Retrieve saved models
 
 void main() async {
   // WidgetsFlutterBinding.ensureInitialized();
@@ -49,7 +36,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();  
     Ads.Ads_init();
-    UploadQNA().uploadMockDatas();
+    // UploadQNA().uploadMockDatas();
   }
 
   @override
@@ -57,14 +44,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      setState(() {
-        mockModelList = MockModelManager.getMockModels();
-      });
-    }
-  }
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   if (state == AppLifecycleState.resumed) {
+  //     setState(() {
+  //       mockModelList = MockModelManager.getMockModels();
+  //     });
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +120,7 @@ class InitialScreen extends StatelessWidget {
             context,
             MaterialPageRoute(
                 builder: (context) => MyHomePage(
-                    toggleTheme: Temporary, mockModelList: mockModelList)),
+                    toggleTheme: Temporary)),
           );
         });
       } else {
@@ -143,7 +130,7 @@ class InitialScreen extends StatelessWidget {
             context,
             MaterialPageRoute(
                 builder: (context) => GeminiAPIScreen(
-                    toggleTheme: Temporary, mockModelList: mockModelList)),
+                    toggleTheme: Temporary)),
           );
         });
       }

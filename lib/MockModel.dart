@@ -39,7 +39,7 @@ class Mockmodel {
   set setDateGenerated(DateTime dateGenerated) => Date_Generated = dateGenerated;
   set setIsTimer(bool isTimer) => IsTimer = isTimer;
   set setTimerTime(int timerTime) => Timer_Time = timerTime;
-  set set_is_upload(bool is_upload) => is_upload = is_upload;
+  set set_is_upload(bool isUpload) => isUpload = isUpload;
 
   // Convert to JSON
   Map<String, dynamic> toJson() => {

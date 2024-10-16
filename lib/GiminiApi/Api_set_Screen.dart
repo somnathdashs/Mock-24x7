@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:mock24x7/HomeScreen.dart';
 import 'package:mock24x7/MockModelManager.dart';
 import 'package:mock24x7/TestWork.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class GeminiAPIScreen extends StatelessWidget {
   final VoidCallback toggleTheme;
-  final mockModelList;
 
   GeminiAPIScreen(
-      {super.key, required this.toggleTheme, required this.mockModelList});
+      {super.key, required this.toggleTheme});
 
   final TextEditingController _apiKeyController = TextEditingController();
 
@@ -106,8 +104,7 @@ class GeminiAPIScreen extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => MyHomePage(
-                                        toggleTheme: toggleTheme,
-                                        mockModelList: mockModelList)),
+                                        toggleTheme: toggleTheme)),
                               );
                             });
                           } else {

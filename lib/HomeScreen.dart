@@ -1,32 +1,19 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
-import 'dart:typed_data';
-import 'package:intl/intl.dart';
-import 'dart:isolate'; // For isolate
+// For isolate
 
 import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mock24x7/AddTODB/addtodb.dart';
 import 'package:mock24x7/Ads.dart';
-import 'package:mock24x7/GiminiApi/Api_set_Screen.dart';
 import 'package:mock24x7/History.dart';
 import 'package:mock24x7/MockInfo.dart';
-import 'package:mock24x7/MockModel.dart';
-import 'package:mock24x7/MockModelManager.dart';
 import 'package:mock24x7/TestWork.dart';
-import 'package:flutter/foundation.dart';
 
-import 'package:flutter/services.dart';
-import 'package:flutter_share/flutter_share.dart';
-import 'package:unity_ads_plugin/unity_ads_plugin.dart';
+import 'package:share_plus/share_plus.dart';
 
 class MyHomePage extends StatelessWidget {
   final VoidCallback toggleTheme;
-  final mockModelList;
-
-  MyHomePage({super.key, required this.toggleTheme, required this.mockModelList});
+  MyHomePage({super.key, required this.toggleTheme, });
   final TextEditingController topicController = TextEditingController();
   final TextEditingController difficultyController = TextEditingController();
   int selectedNumber = 15;
@@ -84,13 +71,16 @@ class MyHomePage extends StatelessWidget {
                 (Platform.isAndroid || Platform.isIOS)
                     ? GestureDetector(
                         onTap: () async {
-                          await FlutterShare.share(
-                              title: 'Share Mock 24x7',
-                              text:
-                                  'A Free AI generated mock test app available 24x7. Download "Mock 24x7" Now --By @somnathdashs (on Github)',
-                              linkUrl:
-                                  'https://somnathdashs.github.io/apps/mock_24x7',
-                              chooserTitle: 'By @somnath_dash1 (x.com)');
+                          // Testwork().openURL("https://somnathdashs.github.io/Mock247/?share=1");
+                          final result = await Share.share('A Free AI generated mock test app available 24x7. Download "Mock 24x7" Now: https://somnathdashs.github.io/Mock247/  \n\nJoin whatsapp channel: https://whatsapp.com/channel/0029VaqvgQB77qVKGQJXyj0v \n\n\n--By @somnathdashs (on Github)');
+
+                          // await FlutterShare.share(
+                          //     title: 'Share Mock 24x7',
+                          //     text:
+                          //         'A Free AI generated mock test app available 24x7. Download "Mock 24x7" Now --By @somnathdashs (on Github)',
+                          //     linkUrl:
+                          //         'https://somnathdashs.github.io/Mock247',
+                          //     chooserTitle: 'Share');
                         },
                         child: const Icon(Icons.share),
                       )
@@ -113,7 +103,7 @@ class MyHomePage extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                             builder: (context) =>
-                                HistoryScreen(mockModelList: mockModelList)));
+                                HistoryScreen()));
                   },
                   child: const Icon(Icons.history),
                 )

@@ -10,7 +10,7 @@ void main() {
 }
 
 class UnityAdsExampleApp extends StatelessWidget {
-  const UnityAdsExampleApp({Key? key}) : super(key: key);
+  const UnityAdsExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +30,7 @@ class UnityAdsExampleApp extends StatelessWidget {
 }
 
 class _UnityAdsExample extends StatefulWidget {
-  const _UnityAdsExample({Key? key}) : super(key: key);
+  const _UnityAdsExample();
 
   @override
   _UnityAdsExampleState createState() => _UnityAdsExampleState();

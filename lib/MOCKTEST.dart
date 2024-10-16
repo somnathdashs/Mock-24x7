@@ -1,12 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cool_alert/cool_alert.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:mock24x7/Ads.dart';
 import 'package:mock24x7/MockModel.dart';
 import 'package:mock24x7/MockModelManager.dart';
-import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 
 class QuizScreen extends StatefulWidget {
   final Mockmodel _mockmodel;

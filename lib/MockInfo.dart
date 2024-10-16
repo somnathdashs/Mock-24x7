@@ -1,16 +1,13 @@
 import 'dart:convert';
-import 'dart:isolate';
 
 import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mock24x7/AddTODB/addtodb.dart';
 import 'package:mock24x7/Ads.dart';
 import 'package:mock24x7/MOCKTEST.dart';
 import 'package:mock24x7/MockModel.dart';
 import 'package:mock24x7/MockModelManager.dart';
 import 'package:mock24x7/TestWork.dart';
-import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 
 class SuccessScreen extends StatefulWidget {
   final Mockmodel _mockmodel;
@@ -145,7 +142,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      "Number of Question: " + sugTopic["Num_Mcq"].toString(),
+                      "Number of Question: ${sugTopic["Num_Mcq"]}",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w400,

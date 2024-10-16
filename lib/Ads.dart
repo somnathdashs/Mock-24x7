@@ -75,10 +75,10 @@ class Ads {
 class AdManager {
   static String get gameId {
     if (Platform.isAndroid) {
-      return 'xxxxxxx';
+      return '5707664';
     }
     if (Platform.isIOS) {
-      return 'xxxxxxx';
+      return '5707665';
     }
     return '';
   }

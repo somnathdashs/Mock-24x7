@@ -1,26 +1,17 @@
-import 'dart:convert';
-import 'dart:math';
-import 'dart:typed_data';
-import 'package:intl/intl.dart';
-import 'dart:isolate'; // For isolate
+// For isolate
 
 import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:mock24x7/AddTODB/addtodb.dart';
+import 'package:intl/intl.dart';
 import 'package:mock24x7/Ads.dart';
-import 'package:mock24x7/GiminiApi/Api_set_Screen.dart';
 import 'package:mock24x7/MockInfo.dart';
 import 'package:mock24x7/MockModel.dart';
 import 'package:mock24x7/MockModelManager.dart';
-import 'package:mock24x7/TestWork.dart';
-import 'package:flutter/foundation.dart';
 
-import 'package:flutter/services.dart';
+var mockModelList = MockModelManager.getMockModels(); // Retrieve saved models
 
 class HistoryScreen extends StatelessWidget {
-  final mockModelList;
-  const HistoryScreen({super.key, required this.mockModelList});
+  const HistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

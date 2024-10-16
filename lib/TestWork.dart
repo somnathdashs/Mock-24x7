@@ -7,7 +7,7 @@ import "package:flutter/material.dart";
 import "package:google_generative_ai/google_generative_ai.dart";
 import "package:mock24x7/MockModel.dart";
 import "package:mock24x7/MockModelManager.dart";
-import "package:python_shell/python_shell.dart";
+// import "package:python_shell/python_shell.dart";
 import "package:url_launcher/url_launcher.dart";
 import "package:url_launcher/url_launcher_string.dart";
 
@@ -47,9 +47,7 @@ class Testwork {
   }
 
   Ask_Gemini(String cmd, [apiKey]) async {
-    if (apiKey == null) {
-      apiKey = await MockModelManager.get_gimini_key();
-    }
+    apiKey ??= await MockModelManager.get_gimini_key();
     try {
       final model = GenerativeModel(
         model: 'gemini-1.5-flash-latest',
@@ -64,35 +62,35 @@ class Testwork {
     }
   }
 
-  Future<String> runPythonShell(String cmd) async {
-    // Hypothetical method to run Python shell code
-    var shell = PythonShell(PythonShellConfig());
-    await shell.initialize();
-    String retTxt = "";
-    var instance = ShellManager.getInstance("default");
-    instance.installRequires(["meta-ai-api"], echo: true);
-    var result = await instance.runString("""
-from meta_ai_api import MetaAI
-ai = MetaAI() 
-response = ai.prompt(message="$cmd")
-print(response["message"])
-    """,
-        echo: true,
-        listener: ShellListener(
-            onMessage: (message) {
-              // Ret_Txt= message["message"]; // Assuming result.output contains the response
-              retTxt = message;
+//   Future<String> runPythonShell(String cmd) async {
+//     // Hypothetical method to run Python shell code
+//     var shell = PythonShell(PythonShellConfig());
+//     await shell.initialize();
+//     String retTxt = "";
+//     var instance = ShellManager.getInstance("default");
+//     instance.installRequires(["meta-ai-api"], echo: true);
+//     var result = await instance.runString("""
+// from meta_ai_api import MetaAI
+// ai = MetaAI() 
+// response = ai.prompt(message="$cmd")
+// print(response["message"])
+//     """,
+//         echo: true,
+//         listener: ShellListener(
+//             onMessage: (message) {
+//               // Ret_Txt= message["message"]; // Assuming result.output contains the response
+//               retTxt = message;
 
-              // if `echo` is `true`, log to console automatically
-            },
-            onError: (e, s) {
-              print("error!$e");
-            },
-            onComplete: () {}));
-    // print(result);
+//               // if `echo` is `true`, log to console automatically
+//             },
+//             onError: (e, s) {
+//               print("error!$e");
+//             },
+//             onComplete: () {}));
+//     // print(result);
 
-    return retTxt;
-  }
+//     return retTxt;
+//   }
 
   void showLoadingDialog(BuildContext context) {
     CoolAlert.show(
@@ -108,16 +106,16 @@ print(response["message"])
     String cmd = cmdGenerater(topic, difficulty, number.toString());
     String qnaString = await Ask_Gemini(cmd);
 
-    if (qnaString == "" || qnaString == null) {
+    if (qnaString == "") {
       qnaString = await Ask_Gemini(cmd);
-      if (qnaString == "" || qnaString == null) {
+      if (qnaString == "") {
         return;
       }
     }
 
-    var temp_QNA;
+    var tempQna;
     try {
-      temp_QNA = jsonDecode(qnaString).cast<Map<String, dynamic>>();
+      tempQna = jsonDecode(qnaString).cast<Map<String, dynamic>>();
     } catch (E) {
       print("Error: $E");
       return;
@@ -128,7 +126,7 @@ print(response["message"])
       Topic: topic,
       Difficulty: difficulty,
       Num_MCQ: number,
-      QNA: (temp_QNA == null) ? List.empty() : temp_QNA,
+      QNA: (tempQna == null) ? List.empty() : tempQna,
       Num_Correct_MCQ: 0,
       Num_attempt_MCQ: 0,
       Num_Incorrect_MCQ: 0,
