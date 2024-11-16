@@ -1,31 +1,46 @@
 import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mock24x7/HomeScreen.dart';
 import 'package:mock24x7/MockModelManager.dart';
 import 'package:mock24x7/TestWork.dart';
 
 class GeminiAPIScreen extends StatelessWidget {
   final VoidCallback toggleTheme;
+  final bool is_saved;
 
   GeminiAPIScreen(
-      {super.key, required this.toggleTheme});
+      {super.key, required this.toggleTheme, this.is_saved = false});
 
   final TextEditingController _apiKeyController = TextEditingController();
 
+  // @override
+  // void initState() {
+  //   super.initState();
+  // }
+
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((x) async {
+      _apiKeyController.text = await MockModelManager.get_gimini_key();
+    });
+
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Gemini API Configuration', style: GoogleFonts.poppins()),
+      ),
       body: SingleChildScrollView(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 70.0,horizontal: 20.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 70.0, horizontal: 20.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 GestureDetector(
                   onTap: () async {},
-                  child: Image.network(
-                    'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Google_Gemini_logo.svg/640px-Google_Gemini_logo.svg.png', // Replace with actual Gemini AI logo URL
+                  child: Image.asset(
+                    'assetss/Gemini.png',
                     height: 200,
                     width: 200,
                   ),
@@ -52,7 +67,7 @@ class GeminiAPIScreen extends StatelessWidget {
                   child: TextField(
                     controller: _apiKeyController,
                     decoration: InputDecoration(
-                      labelText: 'API Key',
+                      labelText: 'API Key Here',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),
@@ -86,7 +101,7 @@ class GeminiAPIScreen extends StatelessWidget {
                         String apiKey = _apiKeyController.text;
                         if (apiKey.isNotEmpty) {
                           CoolAlert.show(
-                            width: 200.0,
+                            width: 400.0,
                             text:
                                 "Checking Your API key. Make sure to connected to internet.",
                             title:
@@ -99,13 +114,26 @@ class GeminiAPIScreen extends StatelessWidget {
                           if (Bool.toString().contains("true")) {
                             Navigator.pop(context);
                             MockModelManager.save_gimini_key(apiKey);
-                            Future.delayed(Duration.zero, () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => MyHomePage(
-                                        toggleTheme: toggleTheme)),
-                              );
+                            CoolAlert.show(
+                                width: 400.0,
+                                    context: context,
+                                    type: CoolAlertType.success,
+                                    title: "Everything Ok!",
+                                    text:
+                                        "The API is saved, and you are good to go.")
+                                .then((onValue) {
+                              if (is_saved) {
+                                Navigator.pop(context);
+                                return;
+                              }
+                              Future.delayed(Duration.zero, () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          MyHomePage(toggleTheme: toggleTheme)),
+                                );
+                              });
                             });
                           } else {
                             Navigator.pop(context);

@@ -1,4 +1,5 @@
 import "dart:convert";
+import "dart:ffi";
 import "dart:math";
 import "dart:io";
 
@@ -7,11 +8,13 @@ import "package:flutter/material.dart";
 import "package:google_generative_ai/google_generative_ai.dart";
 import "package:mock24x7/MockModel.dart";
 import "package:mock24x7/MockModelManager.dart";
+import "package:restart_app/restart_app.dart";
 // import "package:python_shell/python_shell.dart";
 import "package:url_launcher/url_launcher.dart";
 import "package:url_launcher/url_launcher_string.dart";
 
 class Testwork {
+  static int Num_of_Rads_in_24hr = 0;
   Future<void> openURL(String url) async {
     // For Web and Mobile platforms
     if (Platform.isIOS || Platform.isAndroid) {
@@ -38,12 +41,21 @@ class Testwork {
 
   String cmdGenerater(String Topic, String level, String numberMcq) {
     Topic = Topic.toUpperCase();
-    return '''Generate $numberMcq MCQs on the topic '$Topic' in valid JSON format. Each MCQ should be a dictionary with keys: 'Question', 'Options' (a list of 4 distinct options), 'Answer' (the correct answer from the options in string). Make sure all questions you generate must have difficulty level =  '$level'. Ensure all questions are unique, clear, and contextually accurate. Output should only be in JSON format without any additional text or special characters. Use single quotes for all strings. Return the JSON as a list of dictionaries. Make sure to not use any blank lines or new lines. ''';
+    return '''Generate $numberMcq MCQs on the topic '$Topic' in valid JSON format. Each MCQ should be a dictionary with keys: 'Question', 'Options' (a list of 4 distinct options), 'Answer' (the correct answer from the options). Make sure all questions you generate must have difficulty level = '$level'. Ensure all questions are unique, clear, and contextually accurate. Output should only be in JSON format without any additional text or special characters. Return the JSON as a list of dictionaries. Make sure to not use any blank lines or new lines. ''';
   }
 
   String cmd_related_denerater(String Topic, String numberOfTopic) {
     Topic = Topic.toUpperCase();
-    return '''Generate $numberOfTopic topic related to '$Topic'. Make the randomness be 35% . Response in json format having a list of objects of keys 'Topic' (50 char), 'Difficulty' (10 Char),'Num_Mcq' (Max should be 15). Do not respond other than json format. Also, do not use new lines. ''';
+    return '''Generate $numberOfTopic topic related to '$Topic'. Make the randomness be 35% . Response in json format having a list of objects of keys 'Topic' (50 char), 'Difficulty' (10 Char),'Num_Mcq' (Max should be 28). Do not respond other than json format. Also, do not use new lines. for example: [{"Topic": "...", "Difficulty": "...", "Num_Mcq": 28}, .... so on] ''';
+  }
+
+  Explain_A_Question(String Question, String Answer, String Options) {
+    // String cmd =
+    //     '''Generate explanation of `$Question` for answer '$Answer' from options {$Options}. The response should be a json type and no other text format should be: {'Explain':'your responce here'} Output should only be in JSON format without any additional text or special characters.''';
+    var cmd =
+        '''Generate explanation of `$Question` for answer '$Answer' from options {$Options}. The response should be a text format. Note tour response must be genune and point to answer and in maximum 10 sentence.''';
+
+    return Ask_Gemini(cmd);
   }
 
   Ask_Gemini(String cmd, [apiKey]) async {
@@ -56,12 +68,13 @@ class Testwork {
 
       final content = [Content.text(cmd)];
       final res = await model.generateContent(content);
+      print(">>GE?"+res.text!);
       return res.text!;
+
     } catch (e) {
       return false;
     }
   }
-
 //   Future<String> runPythonShell(String cmd) async {
 //     // Hypothetical method to run Python shell code
 //     var shell = PythonShell(PythonShellConfig());
@@ -71,7 +84,7 @@ class Testwork {
 //     instance.installRequires(["meta-ai-api"], echo: true);
 //     var result = await instance.runString("""
 // from meta_ai_api import MetaAI
-// ai = MetaAI() 
+// ai = MetaAI()
 // response = ai.prompt(message="$cmd")
 // print(response["message"])
 //     """,
@@ -99,6 +112,7 @@ class Testwork {
       title: "Generating Mock. It may take a minute...",
       context: context,
       type: CoolAlertType.loading,
+      // widget: Google_Ads.showBannerAd()
     );
   }
 
@@ -140,5 +154,23 @@ class Testwork {
     await MockModelManager.saveMockModel(newmockmodel);
 
     return newmockmodel;
+  }
+
+  static Has_Internet(BuildContext context) async {
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        return true;
+      }
+    } on SocketException catch (_) {
+      CoolAlert.show(
+        width: 200.0,
+        text: "Make sure you are connected to internet.",
+        title: "No Internet!!",
+        context: context,
+        type: CoolAlertType.error,
+      );
+      return false;
+    }
   }
 }

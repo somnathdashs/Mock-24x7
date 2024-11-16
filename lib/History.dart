@@ -2,6 +2,7 @@
 
 import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/intl.dart';
 import 'package:mock24x7/Ads.dart';
 import 'package:mock24x7/MockInfo.dart';
@@ -10,14 +11,29 @@ import 'package:mock24x7/MockModelManager.dart';
 
 var mockModelList = MockModelManager.getMockModels(); // Retrieve saved models
 
-class HistoryScreen extends StatelessWidget {
+class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
+  @override
+  State<HistoryScreen> createState() => _HistoryScreen();
+}
+
+class _HistoryScreen extends State<HistoryScreen> {
+  void Delete() {
+    setState(() {
+      mockModelList = MockModelManager.getMockModels();
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    mockModelList = MockModelManager.getMockModels(); // Retrieve saved models
+
+  }
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((x) async {
-      await Ads.Load_Interstitial_Ads();
-    });
     // print(mockModelList);
     return Scaffold(
       appBar: AppBar(
@@ -46,7 +62,31 @@ class HistoryScreen extends StatelessWidget {
                 shrinkWrap: true,
                 itemCount: mockModels.length,
                 itemBuilder: (context, index) {
-                  return MockCard(mockModel: mockModels[index]);
+                  if ([3, 7, 9].contains(index)) {
+                    int i = (index == 3)
+                        ? 0
+                        : (index == 7)
+                            ? 1
+                            : (index == 9)
+                                ? 2
+                                : 0;
+                    return Column(
+                      children: [
+                        SizedBox(
+                          height: 10,
+                        ),
+                        MockCard(
+                          mockModel: mockModels[index],
+                          ondel: Delete,
+                        ),
+                      ],
+                    );
+                  } else {
+                    return MockCard(
+                      mockModel: mockModels[index],
+                      ondel: Delete,
+                    );
+                  }
                 });
           }),
     );
@@ -55,8 +95,9 @@ class HistoryScreen extends StatelessWidget {
 
 class MockCard extends StatelessWidget {
   final Mockmodel mockModel;
+  final ondel;
 
-  const MockCard({super.key, required this.mockModel});
+  const MockCard({super.key, required this.mockModel, required this.ondel});
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +107,17 @@ class MockCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: GestureDetector(
+        onLongPress: () {
+          CoolAlert.show(
+              width: 150.0,
+              title: "Are you sure to delete it?",
+              context: context,
+              type: CoolAlertType.confirm,
+              onConfirmBtnTap: () {
+                MockModelManager.deleteMockModel(mockModel);
+                ondel();
+              });
+        },
         onTap: () {
           CoolAlert.show(
             autoCloseDuration: const Duration(seconds: 2),
@@ -74,7 +126,7 @@ class MockCard extends StatelessWidget {
             context: context,
             type: CoolAlertType.loading,
           ).then((onValue) async {
-            await Ads.show_Interstitial_Ads();
+            // await Ads.show_Interstitial_Ads();
             Navigator.push(
               context,
               MaterialPageRoute(

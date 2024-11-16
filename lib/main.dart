@@ -2,17 +2,16 @@
 // For isolate
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mock24x7/Ads.dart';
 import 'package:mock24x7/GiminiApi/Api_set_Screen.dart';
+import 'package:mock24x7/History.dart';
 import 'package:mock24x7/HomeScreen.dart';
+import 'package:mock24x7/IntroScreen.dart';
 import 'package:mock24x7/MockModelManager.dart';
 
-
-
 void main() async {
-  // WidgetsFlutterBinding.ensureInitialized();
-  // await Ads.Ads_init();
-  // MobileAds.instance.initialize();
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 
@@ -34,24 +33,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void initState() {
-    super.initState();  
-    Ads.Ads_init();
-    // UploadQNA().uploadMockDatas();
+    super.initState();
   }
 
   @override
   void dispose() {
     super.dispose();
   }
-
-  // @override
-  // void didChangeAppLifecycleState(AppLifecycleState state) {
-  //   if (state == AppLifecycleState.resumed) {
-  //     setState(() {
-  //       mockModelList = MockModelManager.getMockModels();
-  //     });
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -114,30 +102,36 @@ class InitialScreen extends StatelessWidget {
     // Example condition, you can replace this with an actual API check or logic
     checkCondition().then((condition) {
       if (condition) {
+
         // Navigate to the next screen
-        Future.delayed(Duration.zero, () {
+        Future.delayed(Duration(seconds: 2), () {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-                builder: (context) => MyHomePage(
-                    toggleTheme: Temporary)),
+                builder: (context) => MyHomePage(toggleTheme: Temporary)),
           );
         });
       } else {
         // Navigate to the Gemini API screen
-        Future.delayed(Duration.zero, () {
+        Future.delayed(Duration(seconds: 2), () {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-                builder: (context) => GeminiAPIScreen(
-                    toggleTheme: Temporary)),
+                builder: (context) =>
+                    Intro_Video_Screen(toggleTheme: Temporary)),
           );
         });
       }
     });
     // Temporary widget while condition is being checked
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      body: Center(
+          child: ClipRRect(
+              borderRadius: BorderRadius.circular(150),
+              child: Image.asset(
+                "assetss/MOCK.jpg",
+                width: 200,
+              ))),
     );
   }
 

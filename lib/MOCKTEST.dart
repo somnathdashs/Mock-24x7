@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cool_alert/cool_alert.dart';
+import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:mock24x7/Ads.dart';
 import 'package:mock24x7/MockModel.dart';
 import 'package:mock24x7/MockModelManager.dart';
+import 'package:mock24x7/TestWork.dart';
 
 class QuizScreen extends StatefulWidget {
   final Mockmodel _mockmodel;
@@ -13,7 +16,8 @@ class QuizScreen extends StatefulWidget {
   _QuizScreenState createState() => _QuizScreenState();
 }
 
-class _QuizScreenState extends State<QuizScreen> {
+class _QuizScreenState extends State<QuizScreen>
+    with SingleTickerProviderStateMixin {
   int currentQuestion = 0;
   Map<int, int?> answers = {}; // Store user's answers
   late Stopwatch timer;
@@ -23,10 +27,15 @@ class _QuizScreenState extends State<QuizScreen> {
   bool quizSubmitted = false;
   Icon flot_icon = const Icon(Icons.check);
   final FocusNode _focusNode = FocusNode();
+  var submitText = "SUBMIT";
+  String CurrentExplain = "";
+  bool CurrentExplain_isload = false;
+  TabController? tabController;
 
   @override
   void initState() {
     super.initState();
+    tabController = TabController(length: 2, vsync: this);
     if (widget._mockmodel.IsTimer) {
       remainingTime = Duration(minutes: widget._mockmodel.Timer_Time);
       startTimer();
@@ -63,7 +72,8 @@ class _QuizScreenState extends State<QuizScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Time Up!'),
-        content: const Text('You have run out of time. What do you want to do?'),
+        content:
+            const Text('You have run out of time. What do you want to do?'),
         actions: [
           TextButton(
             onPressed: () {
@@ -109,9 +119,12 @@ class _QuizScreenState extends State<QuizScreen> {
     setState(() {
       // Reset everything for a new attempt
       currentQuestion = 0;
+      tabController!.index = 0;
+      CurrentExplain = "";
       answers.clear();
       quizEnded = false;
       flot_icon = const Icon(Icons.check);
+      submitText = "SUBMIT";
       quizSubmitted = false;
       if (widget._mockmodel.IsTimer) {
         remainingTime = Duration(minutes: widget._mockmodel.Timer_Time);
@@ -124,7 +137,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // Check all answers
   void _checkAnswers(int rightans, int totalmcq) async {
-    await Ads.show_Interstitial_Ads();
+    // await Ads.show_Interstitial_Ads();
     CoolAlert.show(
         context: context,
         type: CoolAlertType.confirm,
@@ -134,8 +147,10 @@ class _QuizScreenState extends State<QuizScreen> {
         width: 400.0,
         confirmBtnColor: Colors.green,
         onConfirmBtnTap: () async {
+
           setState(() {
             quizSubmitted = true;
+            submitText = "RESET";
             flot_icon = const Icon(Icons.restart_alt_outlined);
           });
           var title = "Good Job!";
@@ -178,9 +193,9 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((x) async {
-      await Ads.Load_Interstitial_Ads();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((x) async {
+    //   // await Ads.Load_Interstitial_Ads();
+    // });
     void showExitConfirmationDialog() async {
       CoolAlert.show(
           context: context,
@@ -191,7 +206,7 @@ class _QuizScreenState extends State<QuizScreen> {
           cancelBtnText: 'No',
           confirmBtnColor: Colors.blueAccent,
           onConfirmBtnTap: () async {
-            await Ads.show_Interstitial_Ads();
+            // await Ads.show_Interstitial_Ads();
 
             Navigator.pop(context);
           });
@@ -204,6 +219,8 @@ class _QuizScreenState extends State<QuizScreen> {
       if (questions[currentQuestion]["Options"].length >= number) {
         setState(() {
           answers[currentQuestion] = number - 1;
+          tabController!.index = 0;
+          CurrentExplain = "";
         });
       }
     }
@@ -218,13 +235,114 @@ class _QuizScreenState extends State<QuizScreen> {
           showExitConfirmationDialog();
         },
         child: Scaffold(
+          drawer: Drawer(
+              child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 50,
+                ),
+                Text(
+                  "Questions",
+                  style: TextStyle(fontSize: 24),
+                ),
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: (screenWidth > 600)
+                          ? 5
+                          : 3, // Adjust grid based on screen size
+                      childAspectRatio: 2,
+                    ),
+                    itemCount: questions.length,
+                    itemBuilder: (context, index) {
+                      bool attempted = answers.containsKey(index);
+                      bool isCorrect = quizSubmitted &&
+                          answers[index] ==
+                              questions[index]['Options']
+                                  .indexOf(questions[index]['Answer']);
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            currentQuestion = index;
+                            tabController!.index = 0;
+                            CurrentExplain = "";
+                          });
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          margin: EdgeInsets.all(screenWidth > 600 ? 2 : 10),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: quizSubmitted
+                                  ? (isCorrect ? Colors.green : Colors.red)
+                                  : (attempted ? Colors.blue : Colors.grey),
+                              width: 2,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Q${index + 1}',
+                              style: TextStyle(
+                                  fontSize: screenWidth > 600 ? 16 : 12),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          )),
           appBar: AppBar(
-            leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () async {
-                  // Handle back button in the app bar
-                  showExitConfirmationDialog();
-                }),
+            actions: [
+              ElevatedButton(
+                  onPressed: quizSubmitted
+                      ? () {
+                          _restart();
+                        }
+                      : () {
+                          int score = 0;
+                          answers.forEach((index, answer) {
+                            if (questions[index]["Options"]
+                                    .indexOf(questions[index]['Answer']) ==
+                                answer) {
+                              score++;
+                            }
+                          });
+                          _checkAnswers(score, questions.length);
+                        },
+                  child: Text(
+                    submitText,
+                    style: TextStyle(color: Colors.greenAccent.shade400),
+                  ))
+            ],
+            leading: Builder(
+              builder: (context) {
+                return Row(children: [
+                  IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                  )
+                ]);
+              },
+            ),
+            // leading: IconButton(
+            //     icon: const Icon(Icons.arrow_back),
+            //     onPressed: () async {
+            //       // Handle back button in the app bar
+            //       showExitConfirmationDialog();
+            //     }),
             title: FittedBox(
               fit: BoxFit.fitWidth,
               child: Text(widget._mockmodel.Topic),
@@ -234,196 +352,320 @@ class _QuizScreenState extends State<QuizScreen> {
             focusNode: _focusNode,
             autofocus: true,
             onKey: (FocusNode node, RawKeyEvent event) {
-              // Key handling logic...
+              if (event is RawKeyDownEvent) {
+                if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                  if (currentQuestion < questions.length - 1 && !quizEnded) {
+                    setState(() {
+                      currentQuestion++;
+                    });
+                  }
+                } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                  if (currentQuestion > 0 && !quizEnded) {
+                    setState(() {
+                      currentQuestion--;
+                    });
+                  }
+                } else if (event.logicalKey == LogicalKeyboardKey.enter) {
+                  if (!quizSubmitted) {
+                    if (quizEnded || answers.length == questions.length) {
+                      int score = 0;
+                      answers.forEach((index, answer) {
+                        if (questions[index]["Options"]
+                                .indexOf(questions[index]['Answer']) ==
+                            answer) {
+                          score++;
+                        }
+                      });
+                      _checkAnswers(score, questions.length);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Please answer all questions!')),
+                      );
+                    }
+                  }
+                } else if (event.logicalKey == LogicalKeyboardKey.digit1 ||
+                    event.logicalKey == LogicalKeyboardKey.numpad1) {
+                  selectQuestionByNumber(1);
+                } else if (event.logicalKey == LogicalKeyboardKey.digit2 ||
+                    event.logicalKey == LogicalKeyboardKey.numpad2) {
+                  selectQuestionByNumber(2);
+                } else if (event.logicalKey == LogicalKeyboardKey.digit3 ||
+                    event.logicalKey == LogicalKeyboardKey.numpad3) {
+                  selectQuestionByNumber(3);
+                } else if (event.logicalKey == LogicalKeyboardKey.digit4 ||
+                    event.logicalKey == LogicalKeyboardKey.numpad4) {
+                  selectQuestionByNumber(4);
+                } else if (event.logicalKey == LogicalKeyboardKey.digit5 ||
+                    event.logicalKey == LogicalKeyboardKey.numpad5) {
+                  selectQuestionByNumber(5);
+                } else if (event.logicalKey == LogicalKeyboardKey.digit6 ||
+                    event.logicalKey == LogicalKeyboardKey.numpad6) {
+                  selectQuestionByNumber(6);
+                } else if (event.logicalKey == LogicalKeyboardKey.digit7 ||
+                    event.logicalKey == LogicalKeyboardKey.numpad7) {
+                  selectQuestionByNumber(7);
+                } else if (event.logicalKey == LogicalKeyboardKey.digit8 ||
+                    event.logicalKey == LogicalKeyboardKey.numpad8) {
+                  selectQuestionByNumber(8);
+                } else if (event.logicalKey == LogicalKeyboardKey.digit9 ||
+                    event.logicalKey == LogicalKeyboardKey.numpad9) {
+                  selectQuestionByNumber(9);
+                }
+              }
               return KeyEventResult.handled;
             },
-            child: Row(
-              children: [
-                // Left Side: Questions and Options
-                Expanded(
+            child: Row(children: [
+              // Left Side: Questions and Options
+              Expanded(
                   flex: 8,
                   child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.05,
-                      vertical: screenHeight * 0.05,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        FittedBox(
-                          child: Text(
-                            'Question No: ${currentQuestion + 1}/${questions.length}',
-                            style: TextStyle(
-                                fontSize: screenWidth > 600 ? 30 : 25,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * 0.03),
-                        Text(
-                          questions[currentQuestion]['Question'],
-                          textAlign: TextAlign.justify,
-                          style:
-                              TextStyle(fontSize: screenWidth > 600 ? 22 : 15),
-                        ),
-                        SizedBox(height: screenHeight * 0.02),
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount:
-                                questions[currentQuestion]['Options'].length,
-                            itemBuilder: (context, index) {
-                              bool isCorrect = questions[currentQuestion]
-                                      ['Answer'] ==
-                                  questions[currentQuestion]['Options'][index];
-                              bool isSelected =
-                                  answers[currentQuestion] == index;
-                              return RadioListTile<int>(
-                                title: Text(
-                                  questions[currentQuestion]['Options'][index],
-                                  style: TextStyle(
-                                      fontSize: screenWidth > 600 ? 20 : 15),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 15.0, vertical: 4.0),
+                      child: Column(
+                        children: [
+                          (widget._mockmodel.IsTimer)
+                              ? Padding(
+                                  padding: EdgeInsets.all(screenWidth * 0.03),
+                                  child: Center(
+                                    child: Text(
+                                      'Time Left: ${remainingTime.inMinutes}:${(remainingTime.inSeconds % 60).toString().padLeft(2, '0')}',
+                                      style: TextStyle(
+                                          fontSize: screenWidth > 600 ? 22 : 20,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                )
+                              : Center(),
+                          Container(
+                            width: screenWidth > 600 ? 200 : 220,
+                            height: 40,
+                            child: TabBar(
+                              labelColor: Colors.white,
+                              indicatorColor: Colors.transparent,
+                              indicator: ShapeDecoration(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(10))),
+                                  color: Colors.purple.shade500),
+                              tabs: const [
+                                Tab(
+                                  text: "Question",
                                 ),
-                                value: index,
-                                groupValue: answers[currentQuestion],
-                                onChanged: quizEnded || quizSubmitted
-                                    ? null
-                                    : (val) {
+                                Tab(
+                                  text: "Explanation",
+                                ),
+                              ],
+                              controller: tabController,
+                              indicatorSize: TabBarIndicatorSize.tab,
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.03),
+                          Expanded(
+                            child: TabBarView(
+                              controller: tabController,
+                              children: [
+                                Center(
+                                    child: Column(
+                                  children: [
+                                    Text(
+                                      "Q${currentQuestion + 1}. " +
+                                          questions[currentQuestion]
+                                              ['Question'],
+                                      textAlign: TextAlign.justify,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize:
+                                              screenWidth > 600 ? 22 : 15),
+                                    ),
+                                    SizedBox(height: screenHeight * 0.02),
+                                    Expanded(
+                                      child: ListView.builder(
+                                        itemCount: questions[currentQuestion]
+                                                ['Options']
+                                            .length,
+                                        itemBuilder: (context, index) {
+                                          bool isCorrect =
+                                              questions[currentQuestion]
+                                                      ['Answer'] ==
+                                                  questions[currentQuestion]
+                                                      ['Options'][index];
+                                          bool isSelected =
+                                              answers[currentQuestion] == index;
+                                          return RadioListTile<int>(
+                                            title: Text(
+                                              questions[currentQuestion]
+                                                  ['Options'][index],
+                                              style: TextStyle(
+                                                  fontSize: screenWidth > 600
+                                                      ? 20
+                                                      : 15),
+                                            ),
+                                            value: index,
+                                            groupValue:
+                                                answers[currentQuestion],
+                                            onChanged:
+                                                quizEnded || quizSubmitted
+                                                    ? null
+                                                    : (val) {
+                                                        setState(() {
+                                                          answers[currentQuestion] =
+                                                              val!;
+                                                        });
+                                                      },
+                                            tileColor: quizSubmitted &&
+                                                    isCorrect
+                                                ? Colors.green.withOpacity(0.3)
+                                                : null,
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  ],
+                                )),
+                                Center(
+                                  child: (CurrentExplain.isEmpty)
+                                      ? (CurrentExplain_isload)
+                                          ? CircularProgressIndicator()
+                                          : ElevatedButton(
+                                              onPressed:
+                                                  (quizSubmitted || quizEnded)
+                                                      ? () async {
+                                                          if (!await Testwork
+                                                              .Has_Internet(
+                                                                  context)) {
+                                                            return;
+                                                          }
+                                                          setState(() {
+                                                            CurrentExplain_isload =
+                                                                true;
+                                                          });
+                                                          var temp = await Testwork().Explain_A_Question(
+                                                              questions[
+                                                                      currentQuestion]
+                                                                  ['Question'],
+                                                              questions[
+                                                                      currentQuestion]
+                                                                  ['Answer'],
+                                                              questions[currentQuestion]
+                                                                      [
+                                                                      'Options']
+                                                                  .toString());
+                                                          CurrentExplain =
+                                                              "Explanation: \n";
+                                                          setState(() {
+                                                            try {
+                                                              if (temp !=
+                                                                  false) {
+                                                                CurrentExplain += temp
+                                                                    .toString()
+                                                                    .replaceAll(
+                                                                        "**",
+                                                                        "");
+                                                              } else {
+                                                                CurrentExplain =
+                                                                    "Can't fetch explanation for this time.";
+                                                              }
+                                                            } catch (error) {
+                                                              CurrentExplain =
+                                                                  "Can't fetch explanation for this time.";
+                                                            }
+                                                            CurrentExplain_isload =
+                                                                false;
+                                                          });
+                                                        }
+                                                      : null,
+                                              child: Text("View explanation"))
+                                      : SingleChildScrollView(
+                                          child: Text(
+                                            CurrentExplain,
+                                            textAlign: TextAlign.justify,
+                                            style: TextStyle(
+                                                fontSize: screenWidth > 600
+                                                    ? 22
+                                                    : 15),
+                                          ),
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              ElevatedButton(
+                                onPressed: currentQuestion > 0
+                                    ? () {
                                         setState(() {
-                                          answers[currentQuestion] = val!;
+                                          currentQuestion--;
+                                          tabController!.index = 0;
+                                          CurrentExplain = "";
                                         });
-                                      },
-                                tileColor: quizSubmitted && isCorrect
-                                    ? Colors.green.withOpacity(0.3)
+                                      }
                                     : null,
-                              );
-                            },
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            ElevatedButton(
-                              onPressed: currentQuestion > 0
-                                  ? () {
-                                      setState(() {
-                                        currentQuestion--;
-                                      });
-                                    }
-                                  : null,
-                              child: Text('Previous',
-                                  style: TextStyle(
-                                      fontSize: screenWidth > 600 ? 20 : 15)),
-                            ),
-                            ElevatedButton(
-                              onPressed: currentQuestion < questions.length - 1
-                                  ? () {
-                                      setState(() {
-                                        currentQuestion++;
-                                      });
-                                    }
-                                  : null,
-                              child: Text('Next',
-                                  style: TextStyle(
-                                      fontSize: screenWidth > 600 ? 20 : 15)),
-                            ),
-                          ],
-                        ),
-                        Ads.Show_Banner_Ads(),
-                      ],
-                    ),
-                  ),
-                ),
-                // Right Side: Timer and Overview
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.all(screenWidth * 0.05),
-                        child: Center(
-                          child: Text(
-                            (widget._mockmodel.IsTimer)
-                                ? 'Time Left: ${remainingTime.inMinutes}:${(remainingTime.inSeconds % 60).toString().padLeft(2, '0')}'
-                                : "No Timer",
-                            style: TextStyle(
-                                fontSize: screenWidth > 600 ? 22 : 17,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      // Overview of questions
-                      Expanded(
-                        child: GridView.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: (screenWidth > 600)
-                                ? 5
-                                : 2, // Adjust grid based on screen size
-                            childAspectRatio: 2,
-                          ),
-                          itemCount: questions.length,
-                          itemBuilder: (context, index) {
-                            bool attempted = answers.containsKey(index);
-                            bool isCorrect = quizSubmitted &&
-                                answers[index] ==
-                                    questions[index]['Options']
-                                        .indexOf(questions[index]['Answer']);
-                            return GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  currentQuestion = index;
-                                });
-                              },
-                              child: Container(
-                                margin:
-                                    EdgeInsets.all(screenWidth > 600 ? 2 : 1),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: quizSubmitted
-                                        ? (isCorrect
-                                            ? Colors.green
-                                            : Colors.red)
-                                        : (attempted
-                                            ? Colors.blue
-                                            : Colors.grey),
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Q${index + 1}',
+                                child: Text('Previous',
                                     style: TextStyle(
-                                        fontSize: screenWidth > 600 ? 16 : 12),
-                                  ),
-                                ),
+                                        fontSize: screenWidth > 600 ? 20 : 15)),
                               ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: quizSubmitted
-                ? () {
-                    _restart();
-                  }
-                : () {
-                    int score = 0;
-                    answers.forEach((index, answer) {
-                      if (questions[index]["Options"]
-                              .indexOf(questions[index]['Answer']) ==
-                          answer) {
-                        score++;
-                      }
-                    });
-                    _checkAnswers(score, questions.length);
-                  },
-            backgroundColor: Colors.green,
-            child: flot_icon,
+                              ElevatedButton(
+                                onPressed:
+                                    currentQuestion < questions.length - 1
+                                        ? () {
+                                            setState(() {
+                                              currentQuestion++;
+                                              tabController!.index = 0;
+                                              CurrentExplain = "";
+                                            });
+                                          }
+                                        : null,
+                                child: Text('Next',
+                                    style: TextStyle(
+                                        fontSize: screenWidth > 600 ? 20 : 15)),
+                              ),
+                            ],
+                          ),
+                          // Expanded(
+                          //   flex: 8,
+                          //   child: Padding(
+                          //     padding: EdgeInsets.symmetric(
+                          //         horizontal: 15.0, vertical: 4.0),
+                          //     child: Column(
+                          //       crossAxisAlignment: CrossAxisAlignment.center,
+                          //       children: [
+                          //         (widget._mockmodel.IsTimer)
+                          //             ? Padding(
+                          //                 padding: EdgeInsets.all(
+                          //                     screenWidth * 0.07),
+                          //                 child: Center(
+                          //                   child: Text(
+                          //                     'Time Left: ${remainingTime.inMinutes}:${(remainingTime.inSeconds % 60).toString().padLeft(2, '0')}',
+                          //                     style: TextStyle(
+                          //                         fontSize: screenWidth > 600
+                          //                             ? 22
+                          //                             : 20,
+                          //                         fontWeight: FontWeight.bold),
+                          //                   ),
+                          //                 ),
+                          //               )
+                          //             : Center(),
+                          //         // SizedBox(height: screenHeight * 0.03),
+                          //         // Text(
+                          //         //   "Q${currentQuestion + 1}. " +
+                          //         //       questions[currentQuestion]['Question'],
+                          //         //   textAlign: TextAlign.justify,
+                          //         //   style: TextStyle(
+                          //         //       fontSize: screenWidth > 600 ? 22 : 15),
+                          //         // ),
+                          //         // SizedBox(height: screenHeight * 0.02),
+                          //  ,
+
+                          //         // Ads.Show_Banner_Ads(),
+                          //       ],
+                          //     ),
+                          //   ),
+                          // ),
+                        ],
+                      )))
+            ]),
           ),
         ));
   }
